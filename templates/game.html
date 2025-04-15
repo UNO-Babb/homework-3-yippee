@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if game_state.winner is not none %}
+<div class="message-box">
+    <h2 class="winner">🏆 {{ game_state.players[game_state.winner].name }} wins the game! 🏆</h2>
+    <p>They've collected 100 or more coins and found the legendary treasure!</p>
+    <a href="{{ url_for('reset_game') }}" class="button">Start a New Adventure</a>
+</div>
+{% elif game_state.last_action %}
+<div class="message-box">
+    <h3>{{ game_state.last_action.event }}</h3>
+    <p>Category: {{ game_state.last_action.category|capitalize }}</p>
+    <p>{{ game_state.last_action.effect }}</p>
+</div>
+{% endif %}
+
+<div class="board">
+    {% for row_index in range(grid_size) %}
+        {% for col_index in range(grid_size) %}
+            {% set space = game_state.board[row_index][col_index] %}
+            <div style="width: 100%; aspect-ratio: 1;">
+                <form method="POST" action="{{ url_for('select_space') }}" style="width: 100%; height: 100%; margin: 0; padding: 0;">
+                    <input type="hidden" name="row" value="{{ row_index }}">
+                    <input type="hidden" name="col" value="{{ col_index }}">
+                    <button type="submit" 
+                            class="space {% if space.revealed %}revealed{% endif %}" 
+                            {% if space.revealed or game_state.winner is not none %}disabled{% endif %}>
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+<div class="player-info">
+    {% for player in game_state.players %}
+    {% set player_index = loop.index0 %}
+    <div class="player-card {% if game_state.current_player_index == player_index and game_state.winner is none %}current{% endif %}">
+        <div class="player-name">
+            {% if game_state.current_player_index == player_index and game_state.winner is none %}
+            <span class="current-player-icon">⚓</span>
+            {% endif %}
+            {{ player.name }}
+        </div>
+        <div class="coins">
+            <span class="coin-icon">💰</span>
+            <span>{{ player.coins }} coins</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+    <a href="{{ url_for('reset_game') }}" class="button">Start Over</a>
+</div>
+{% endblock %}
